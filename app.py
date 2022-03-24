@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
@@ -22,7 +22,21 @@ class Etudiant(db.Model):
         self.classe = classe
     
     def __repr__(self):
-        return f"<Etudiant {self.nom_complet}>"    
+        return f"<Etudiant {self.nom_complet}>"   
+    
+
+### Endpoint ###
+@app.route('/etudiant', methods=['GET','POST'])
+def handle_etudiant():
+    if request.method == 'POST':
+        if request.is_json:
+            data = request.get_json()
+            new_etudiant = Etudiant(nom_complet=data['nom_complet'], classe=data['classe'])
+            db.session.add(new_etudiant)
+            db.session.commit()
+            return {"message": f"Etudiant  {new_etudiant.nom_complet} creer avec success !!"}
+        else:
+            return {"error":"Requete json malformer "}     
         
 
 @app.route('/')
