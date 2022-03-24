@@ -1,6 +1,7 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+import os
 
 app = Flask(__name__)
 
@@ -22,12 +23,18 @@ class Etudiant(db.Model):
         self.classe = classe
     
     def __repr__(self):
-        return f"<Etudiant {self.nom_complet}>"   
+        return f"<Etudiant {self.nom_complet}>"
+    
+    @property
+    def serialize(self):
+        ## serialisation donnee
+        return {"nom_complet":self.nom_complet, "classe": self.classe}        
     
 
 ### Endpoint ###
 @app.route('/etudiant', methods=['GET','POST'])
 def handle_etudiant():
+    ### POST request ###
     if request.method == 'POST':
         if request.is_json:
             data = request.get_json()
@@ -36,9 +43,14 @@ def handle_etudiant():
             db.session.commit()
             return {"message": f"Etudiant  {new_etudiant.nom_complet} creer avec success !!"}
         else:
-            return {"error":"Requete json malformer "}     
+            return {"error":"Requete json malformer "}
         
-
+    ### GET request ###
+    elif request.method == 'GET':
+        etudiant = Etudiant.query.all()
+        return jsonify([et.serialize for et in etudiant])    
+    
+          
 @app.route('/')
 def initialisation():
     return {'sample':'Flask Project for test'}
